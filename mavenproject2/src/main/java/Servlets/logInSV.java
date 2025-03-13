@@ -4,19 +4,26 @@
  */
 package Servlets;
 
+import DAO.LoginDao;
+import funcions.LoginBean;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 
 /**
  *
  * @author juanpa
  */
-@WebServlet(name = "logInSV", urlPatterns = {"/logInSV  "})
+@WebServlet(name = "logInSV", urlPatterns = {"/logInSV"})
 public class logInSV extends HttpServlet {
 
     /**
@@ -72,6 +79,28 @@ public class logInSV extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        LoginBean loginBean = new LoginBean();
+        loginBean.setUsername(username);
+        loginBean.setPassword(password);
+        
+        try {
+            if (LoginDao.validate(loginBean)) {
+                HttpSession session = request.getSession();
+                session.setAttribute("username", username);
+                response.sendRedirect("loginsuccess.jsp"); // Redirigir a la página de éxito
+            } else {
+                HttpSession session = request.getSession();
+                session.setAttribute("error", "Usuario o contraseña incorrectos");
+                response.sendRedirect("login.jsp"); // Redirigir de vuelta al login con un mensaje de error
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(logInSV.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 
     /**
